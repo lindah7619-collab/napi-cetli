@@ -1,1 +1,17 @@
-
+{
+  "name": "Napi cetli",
+  "short_name": "Napi cetli",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f1eb",
+  "theme_color": "#f3f1eb",
+  "lang": "hu",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
