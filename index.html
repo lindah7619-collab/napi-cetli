@@ -230,7 +230,10 @@
 <audio id="presenceSound" preload="auto">
     <source src="freesound_community-little-whoosh-2-6301.mp3" type="audio/mpeg">
 </audio>
-<div class="page">
+<audio id="closingSound" preload="auto">
+    <source src="alex_jauk-wind-chimes-2-199848.mp3" type="audio/mpeg">
+</audio>
+   <div class="page">
 
     <div class="date" id="date"></div>
 
@@ -622,29 +625,34 @@ function startNewDay() {
 }
 
 function updateDayState() {
-
     const now = new Date();
+    const isToday = data.date === todayString();
+    const isClosed = isToday && now.getHours() >= 18;
 
-    const isToday =
-        data.date === todayString();
-
-  const isClosed =
-    isToday && now.getHours() >= 18;
-
-    const page =
-        document.querySelector(".page");
-
-    const closingMessage =
-        document.getElementById("closingMessage");
-
+    const page = document.querySelector(".page");
+    const closingMessage = document.getElementById("closingMessage");
 
     if (isClosed) {
-
         page.classList.add("day-closed");
         closingMessage.style.display = "block";
 
-    } else {
+        const closingSoundKey = "closingSoundPlayed_" + todayString();
+        const alreadyPlayed =
+            localStorage.getItem(closingSoundKey) === "true";
 
+        if (!alreadyPlayed) {
+            const sound = document.getElementById("closingSound");
+            sound.currentTime = 0;
+            sound.volume = 1;
+
+            sound.play()
+                .then(() => {
+                    localStorage.setItem(closingSoundKey, "true");
+                })
+                .catch(() => {});
+        }
+
+    } else {
         page.classList.remove("day-closed");
         closingMessage.style.display = "none";
     }
