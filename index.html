@@ -429,16 +429,22 @@ function renderTasks() {
         check.className = "check";
 
 
-        check.addEventListener("click", () => {
+       check.addEventListener("click", () => {
+    if (!task.text.trim()) return;
 
-            if (!task.text.trim()) return;
+    const wasCompleted = task.completed;
+    task.completed = !task.completed;
 
-            task.completed =
-                !task.completed;
+    if (!wasCompleted && task.completed) {
+        const sound = document.getElementById("presenceSound");
+        sound.currentTime = 0;
+        sound.volume = 1;
+        sound.play().catch(() => {});
+    }
 
-            save();
-            renderTasks();
-        });
+    save();
+    renderTasks();
+});
 
 
         const input =
@@ -738,25 +744,6 @@ document
             startNewDay();
         }
     });
-const soundTestButton = document.createElement("button");
-soundTestButton.textContent = "Hangpróba";
-soundTestButton.style.margin = "20px";
-soundTestButton.style.padding = "12px";
-
-soundTestButton.addEventListener("click", async () => {
-    const sound = document.getElementById("presenceSound");
-    sound.currentTime = 0;
-    sound.volume = 1;
-
-    try {
-        await sound.play();
-        alert("A böngésző elindította a hangot.");
-    } catch (error) {
-        alert("Hanghiba: " + error.name + " – " + error.message);
-    }
-});
-
-document.querySelector(".page").appendChild(soundTestButton);
 
 setInterval(updateDayState, 30000);
 </script>
