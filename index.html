@@ -188,7 +188,36 @@
         opacity: .6;
         min-height: 15px;
     }
+.closing-message {
+    display: none;
+    margin: 30px 5px 24px;
+    padding: 20px 14px;
+    text-align: center;
+    border-top: 1px solid #cbc8bf;
+    border-bottom: 1px solid #cbc8bf;
+}
 
+.closing-rhyme {
+    font-size: 18px;
+    font-style: italic;
+    margin-bottom: 8px;
+}
+
+.closing-text {
+    font-size: 15px;
+    line-height: 1.5;
+    opacity: .75;
+}
+
+.day-closed .task input {
+    pointer-events: none;
+}
+
+.day-closed .task .check,
+.day-closed .task .main-button {
+    pointer-events: none;
+    opacity: .55;
+}
 </style>
 </head>
 
@@ -209,7 +238,14 @@
     </div>
 
     <div id="tasks"></div>
-
+<div id="closingMessage" class="closing-message">
+    <div class="closing-rhyme">
+        Hatot ütött lám az óra…
+    </div>
+    <div class="closing-text">
+        A nap tevékenységi része mára véget ért.
+    </div>
+</div>
     <div class="later" id="laterBox">
 
         <div class="later-title" id="laterTitle">
@@ -564,7 +600,34 @@ function startNewDay() {
     render();
 }
 
+function updateDayState() {
 
+    const now = new Date();
+
+    const isToday =
+        data.date === todayString();
+
+    const isClosed =
+        isToday && now.getHours() >= 18;
+
+    const page =
+        document.querySelector(".page");
+
+    const closingMessage =
+        document.getElementById("closingMessage");
+
+
+    if (isClosed) {
+
+        page.classList.add("day-closed");
+        closingMessage.style.display = "block";
+
+    } else {
+
+        page.classList.remove("day-closed");
+        closingMessage.style.display = "none";
+    }
+}
 function render() {
 
     formatDate();
@@ -575,6 +638,7 @@ function render() {
 
     renderTasks();
     renderLater();
+updateDayState();
 }
 
 
@@ -643,7 +707,7 @@ document
             startNewDay();
         }
     });
-
+setInterval(updateDayState, 30000);
 </script>
 
 </body>
