@@ -499,7 +499,18 @@ function renderLater() {
         todayButton.textContent = "↑ Ma";
 
         todayButton.addEventListener("click", () => {
+const now = new Date();
 
+const dayIsClosed =
+    data.date === todayString() &&
+    (
+        now.getHours() > 9 ||
+        (now.getHours() === 9 && now.getMinutes() >= 50)
+    );
+
+if (dayIsClosed) {
+    return;
+}
             const emptyIndex = data.tasks.findIndex(
                 task => !task.text.trim()
             );
