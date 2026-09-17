@@ -607,8 +607,12 @@ function updateDayState() {
     const isToday =
         data.date === todayString();
 
-    const isClosed =
-        isToday && now.getHours() >= 18;
+   const isClosed =
+    isToday &&
+    (
+        now.getHours() > 9 ||
+        (now.getHours() === 9 && now.getMinutes() >= 40)
+    );
 
     const page =
         document.querySelector(".page");
