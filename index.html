@@ -446,32 +446,50 @@ function renderTasks() {
 
 function renderLater() {
 
-    const list =
-        document.getElementById("laterList");
-
+    const list = document.getElementById("laterList");
     list.innerHTML = "";
 
     data.later.forEach((text, index) => {
 
-        const item =
-            document.createElement("div");
-
+        const item = document.createElement("div");
         item.className = "later-item";
 
-
-        const span =
-            document.createElement("span");
-
+        const span = document.createElement("span");
         span.textContent = text;
 
+        const actions = document.createElement("div");
 
-        const remove =
-            document.createElement("button");
+        const todayButton = document.createElement("button");
+        todayButton.textContent = "↑ Ma";
 
-        remove.textContent = "×";
+        todayButton.addEventListener("click", () => {
+
+            const emptyIndex = data.tasks.findIndex(
+                task => !task.text.trim()
+            );
+
+            if (emptyIndex === -1) {
+                alert("A mai cetli mind a 7 helye foglalt.");
+                return;
+            }
+
+            data.tasks[emptyIndex] = {
+                text: text,
+                completed: false
+            };
+
+            data.later.splice(index, 1);
+
+            save();
+            renderTasks();
+            renderLater();
+        });
 
 
-        remove.addEventListener("click", () => {
+        const releaseButton = document.createElement("button");
+        releaseButton.textContent = "× Elengedem";
+
+        releaseButton.addEventListener("click", () => {
 
             data.later.splice(index, 1);
 
@@ -480,12 +498,14 @@ function renderLater() {
         });
 
 
+        actions.appendChild(todayButton);
+        actions.appendChild(releaseButton);
+
         item.appendChild(span);
-        item.appendChild(remove);
+        item.appendChild(actions);
 
         list.appendChild(item);
     });
-
 }
 
 
