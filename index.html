@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Napi cetli</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        background: #f3f1eb;
+        font-family: Georgia, serif;
+        color: #30302d;
+    }
+
+    .page {
+        max-width: 480px;
+        min-height: 100vh;
+        margin: auto;
+        padding: 28px 20px 50px;
+    }
+
+    .date {
+        text-align: center;
+        font-size: 20px;
+        margin-bottom: 14px;
+    }
+
+    .time-row {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 18px;
+    }
+
+    .time-row input {
+        width: 55px;
+        border: none;
+        border-bottom: 1px solid #777;
+        background: transparent;
+        text-align: center;
+        font: inherit;
+        outline: none;
+    }
+
+    .task {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 48px;
+        border-bottom: 1px solid #cbc8bf;
+    }
+
+    .main-button {
+        width: 28px;
+        flex: 0 0 28px;
+        border: none;
+        background: transparent;
+        font-size: 23px;
+        cursor: pointer;
+        color: #aaa;
+        padding: 0;
+    }
+
+    .task.main .main-button {
+        color: #444;
+    }
+
+    .check {
+        width: 23px;
+        height: 23px;
+        flex: 0 0 23px;
+        border: 1.5px solid #777;
+        border-radius: 50%;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .task.completed .check::after {
+        content: "✓";
+        position: absolute;
+        left: 4px;
+        top: -2px;
+        font-size: 19px;
+    }
+
+    .task input {
+        flex: 1;
+        min-width: 0;
+        border: none;
+        background: transparent;
+        font-family: Georgia, serif;
+        font-size: 17px;
+        padding: 10px 2px;
+        outline: none;
+        color: #30302d;
+    }
+
+    .task.completed input {
+        text-decoration: line-through;
+        opacity: .55;
+    }
+
+    .later {
+        margin-top: 30px;
+        border-top: 1px solid #aaa79f;
+        border-bottom: 1px solid #aaa79f;
+    }
+
+    .later-title {
+        padding: 13px 4px;
+        cursor: pointer;
+        user-select: none;
+        font-size: 16px;
+    }
+
+    .later-content {
+        display: none;
+        padding: 0 4px 14px;
+    }
+
+    .later.open .later-content {
+        display: block;
+    }
+
+    .later-input-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .later-input-row input {
+        flex: 1;
+        min-width: 0;
+        padding: 8px;
+        border: 1px solid #bbb;
+        border-radius: 5px;
+        background: #faf9f5;
+        font-size: 15px;
+    }
+
+    .later-input-row button {
+        border: 1px solid #999;
+        background: transparent;
+        border-radius: 5px;
+        padding: 5px 12px;
+        cursor: pointer;
+    }
+
+    .later-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 7px 2px;
+        border-bottom: 1px dotted #ccc;
+        font-size: 15px;
+    }
+
+    .later-item button {
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .new-day-wrap {
+        text-align: center;
+        margin-top: 35px;
+    }
+
+    .new-day {
+        border: 1px solid #777;
+        background: transparent;
+        border-radius: 7px;
+        padding: 10px 22px;
+        font-family: Georgia, serif;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+    .main-label {
+        font-size: 12px;
+        margin: 7px 0 0 61px;
+        opacity: .6;
+        min-height: 15px;
+    }
+
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+    <div class="date" id="date"></div>
+
+    <div class="time-row">
+        Ma
+        <input id="availableHours"
+               type="number"
+               min="0"
+               max="24"
+               step="0.5">
+        órám van
+    </div>
+
+    <div id="tasks"></div>
+
+    <div class="later" id="laterBox">
+
+        <div class="later-title" id="laterTitle">
+            ▸ Később
+        </div>
+
+        <div class="later-content">
+
+            <div class="later-input-row">
+                <input
+                    id="laterInput"
+                    type="text"
+                    placeholder="Tedd félre későbbre..."
+                >
+                <button id="addLater">+</button>
+            </div>
+
+            <div id="laterList"></div>
+
+        </div>
+
+    </div>
+
+    <div class="new-day-wrap">
+        <button class="new-day" id="newDay">
+            Új nap
+        </button>
+    </div>
+
+</div>
+
+
+<script>
+
+const STORAGE_KEY = "napiCetliData";
+
+function emptyTasks() {
+    return Array.from({ length: 7 }, () => ({
+        text: "",
+        completed: false
+    }));
+}
+
+let data = {
+    date: todayString(),
+    availableHours: "",
+    tasks: emptyTasks(),
+    mainTask: null,
+    later: []
+};
+
+
+function todayString() {
+
+    const now = new Date();
+
+    return (
+        now.getFullYear() + "-" +
+        String(now.getMonth() + 1).padStart(2, "0") + "-" +
+        String(now.getDate()).padStart(2, "0")
+    );
+}
+
+
+function load() {
+
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (saved) {
+
+        try {
+
+            const parsed = JSON.parse(saved);
+
+            data = {
+                ...data,
+                ...parsed
+            };
+
+            while (data.tasks.length < 7) {
+                data.tasks.push({
+                    text: "",
+                    completed: false
+                });
+            }
+
+            data.tasks = data.tasks.slice(0, 7);
+
+        } catch (e) {
+            console.log("Mentett adatok nem olvashatók.");
+        }
+    }
+}
+
+
+function save() {
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(data)
+    );
+}
+
+
+function formatDate() {
+
+    const d = new Date(data.date + "T12:00:00");
+
+    const formatter = new Intl.DateTimeFormat(
+        "hu-HU",
+        {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            weekday: "long"
+        }
+    );
+
+    document.getElementById("date").textContent =
+        formatter.format(d);
+}
+
+
+function renderTasks() {
+
+    const container =
+        document.getElementById("tasks");
+
+    container.innerHTML = "";
+
+    data.tasks.forEach((task, index) => {
+
+        const row =
+            document.createElement("div");
+
+        row.className = "task";
+
+        if (task.completed) {
+            row.classList.add("completed");
+        }
+
+        if (data.mainTask === index) {
+            row.classList.add("main");
+        }
+
+
+        const star =
+            document.createElement("button");
+
+        star.className = "main-button";
+        star.textContent =
+            data.mainTask === index ? "★" : "☆";
+
+        star.title = "Fő feladat";
+
+
+        star.addEventListener("click", () => {
+
+            if (!task.text.trim()) return;
+
+            if (data.mainTask === index) {
+                data.mainTask = null;
+            } else {
+                data.mainTask = index;
+            }
+
+            save();
+            renderTasks();
+        });
+
+
+        const check =
+            document.createElement("div");
+
+        check.className = "check";
+
+
+        check.addEventListener("click", () => {
+
+            if (!task.text.trim()) return;
+
+            task.completed =
+                !task.completed;
+
+            save();
+            renderTasks();
+        });
+
+
+        const input =
+            document.createElement("input");
+
+        input.type = "text";
+        input.value = task.text;
+
+
+        input.addEventListener("input", e => {
+
+            task.text =
+                e.target.value;
+
+            if (
+                !task.text.trim() &&
+                data.mainTask === index
+            ) {
+                data.mainTask = null;
+            }
+
+            save();
+        });
+
+
+        row.appendChild(star);
+        row.appendChild(check);
+        row.appendChild(input);
+
+        container.appendChild(row);
+
+
+        if (data.mainTask === index) {
+
+            const label =
+                document.createElement("div");
+
+            label.className = "main-label";
+            label.textContent = "mai fő dolog";
+
+            container.appendChild(label);
+        }
+
+    });
+
+}
+
+
+function renderLater() {
+
+    const list =
+        document.getElementById("laterList");
+
+    list.innerHTML = "";
+
+    data.later.forEach((text, index) => {
+
+        const item =
+            document.createElement("div");
+
+        item.className = "later-item";
+
+
+        const span =
+            document.createElement("span");
+
+        span.textContent = text;
+
+
+        const remove =
+            document.createElement("button");
+
+        remove.textContent = "×";
+
+
+        remove.addEventListener("click", () => {
+
+            data.later.splice(index, 1);
+
+            save();
+            renderLater();
+        });
+
+
+        item.appendChild(span);
+        item.appendChild(remove);
+
+        list.appendChild(item);
+    });
+
+}
+
+
+function addLaterItem() {
+
+    const input =
+        document.getElementById("laterInput");
+
+    const text =
+        input.value.trim();
+
+    if (!text) return;
+
+    data.later.push(text);
+
+    input.value = "";
+
+    save();
+    renderLater();
+}
+
+
+function startNewDay() {
+
+    const unfinished =
+        data.tasks
+            .filter(task =>
+                task.text.trim() &&
+                !task.completed
+            )
+            .map(task => ({
+                text: task.text,
+                completed: false
+            }));
+
+
+    const newTasks = emptyTasks();
+
+    unfinished
+        .slice(0, 7)
+        .forEach((task, index) => {
+            newTasks[index] = task;
+        });
+
+
+    data.date = todayString();
+
+    data.availableHours = "";
+
+    data.tasks = newTasks;
+
+    data.mainTask = null;
+
+    save();
+
+    render();
+}
+
+
+function render() {
+
+    formatDate();
+
+    document.getElementById(
+        "availableHours"
+    ).value = data.availableHours;
+
+    renderTasks();
+    renderLater();
+}
+
+
+load();
+render();
+
+
+document
+    .getElementById("availableHours")
+    .addEventListener("input", e => {
+
+        data.availableHours =
+            e.target.value;
+
+        save();
+    });
+
+
+document
+    .getElementById("laterTitle")
+    .addEventListener("click", () => {
+
+        const box =
+            document.getElementById("laterBox");
+
+        box.classList.toggle("open");
+
+        document.getElementById(
+            "laterTitle"
+        ).textContent =
+            box.classList.contains("open")
+                ? "▾ Később"
+                : "▸ Később";
+    });
+
+
+document
+    .getElementById("addLater")
+    .addEventListener(
+        "click",
+        addLaterItem
+    );
+
+
+document
+    .getElementById("laterInput")
+    .addEventListener("keydown", e => {
+
+        if (e.key === "Enter") {
+            addLaterItem();
+        }
+    });
+
+
+document
+    .getElementById("newDay")
+    .addEventListener("click", () => {
+
+        const ok = confirm(
+            "Induljon az új nap? " +
+            "A kész feladatok eltűnnek, " +
+            "a megmaradtak átkerülnek."
+        );
+
+        if (ok) {
+            startNewDay();
+        }
+    });
+
+</script>
+
+</body>
+</html>
