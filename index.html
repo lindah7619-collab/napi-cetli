@@ -627,7 +627,7 @@ function startNewDay() {
 function updateDayState() {
     const now = new Date();
     const isToday = data.date === todayString();
-    const isClosed = isToday && now.getHours() >= 12; // TESZT
+    const isClosed = isToday && now.getHours() >= 18;
 
     const page = document.querySelector(".page");
     const closingMessage = document.getElementById("closingMessage");
@@ -643,11 +643,11 @@ function updateDayState() {
 document.addEventListener("click", () => {
     const now = new Date();
     const isToday = data.date === todayString();
-    const isClosed = isToday && now.getHours() >= 12; // TESZT
+    const isClosed = isToday && now.getHours() >= 18; 
 
     if (!isClosed) return;
 
-    const closingSoundKey = "closingSoundTest_" + todayString();
+    const closingSoundKey = "closingSoundPlayed_" + todayString();
     const alreadyPlayed =
         localStorage.getItem(closingSoundKey) === "true";
 
