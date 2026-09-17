@@ -738,13 +738,27 @@ document
             startNewDay();
         }
     });
-document.addEventListener("click", () => {
+const soundTestButton = document.createElement("button");
+soundTestButton.textContent = "Hangpróba";
+soundTestButton.style.margin = "20px";
+soundTestButton.style.padding = "12px";
+
+soundTestButton.addEventListener("click", async () => {
     const sound = document.getElementById("presenceSound");
     sound.currentTime = 0;
-    sound.volume = 0.5;
-    sound.play();
-}, { once: true });
-   setInterval(updateDayState, 30000);
+    sound.volume = 1;
+
+    try {
+        await sound.play();
+        alert("A böngésző elindította a hangot.");
+    } catch (error) {
+        alert("Hanghiba: " + error.name + " – " + error.message);
+    }
+});
+
+document.querySelector(".page").appendChild(soundTestButton);
+
+setInterval(updateDayState, 30000);
 </script>
 
 </body>
