@@ -181,7 +181,10 @@
         font-size: 15px;
         cursor: pointer;
     }
-
+.new-day:disabled {
+    opacity: .4;
+    cursor: default;
+}
     .main-label {
         font-size: 12px;
         margin: 7px 0 0 61px;
@@ -503,10 +506,7 @@ const now = new Date();
 
 const dayIsClosed =
     data.date === todayString() &&
-    (
-        now.getHours() > 9 ||
-        (now.getHours() === 9 && now.getMinutes() >= 50)
-    );
+    now.getHours() >= 18;
 
 if (dayIsClosed) {
     return;
@@ -618,12 +618,8 @@ function updateDayState() {
     const isToday =
         data.date === todayString();
 
-   const isClosed =
-    isToday &&
-    (
-        now.getHours() > 9 ||
-        (now.getHours() === 9 && now.getMinutes() >= 40)
-    );
+  const isClosed =
+    isToday && now.getHours() >= 18;
 
     const page =
         document.querySelector(".page");
@@ -643,7 +639,22 @@ function updateDayState() {
         closingMessage.style.display = "none";
     }
 }
-function render() {
+function updateNewDayButton() {
+
+    const button = document.getElementById("newDay");
+
+    const newCalendarDay =
+        data.date !== todayString();
+
+    button.disabled = !newCalendarDay;
+
+    if (newCalendarDay) {
+        button.textContent = "Új nap";
+    } else {
+        button.textContent = "Mai nap";
+    }
+}
+   function render() {
 
     formatDate();
 
@@ -654,7 +665,8 @@ function render() {
     renderTasks();
     renderLater();
 updateDayState();
-}
+updateNewDayButton();
+   }
 
 
 load();
