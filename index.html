@@ -738,12 +738,12 @@ document
             startNewDay();
         }
     });
-document.addEventListener("dblclick", () => {
+document.addEventListener("click", () => {
     const sound = document.getElementById("presenceSound");
     sound.currentTime = 0;
     sound.volume = 0.5;
     sound.play();
-});
+}, { once: true });
    setInterval(updateDayState, 30000);
 </script>
 
