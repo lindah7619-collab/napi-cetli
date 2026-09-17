@@ -627,7 +627,7 @@ function startNewDay() {
 function updateDayState() {
     const now = new Date();
     const isToday = data.date === todayString();
-    const isClosed = isToday && now.getHours() >= 12;
+    const isClosed = isToday && now.getHours() >= 12; // TESZT
 
     const page = document.querySelector(".page");
     const closingMessage = document.getElementById("closingMessage");
@@ -635,29 +635,35 @@ function updateDayState() {
     if (isClosed) {
         page.classList.add("day-closed");
         closingMessage.style.display = "block";
-
-        const closingSoundKey = "closingSoundPlayed_" + todayString();
-        const alreadyPlayed =
-            localStorage.getItem(closingSoundKey) === "true";
-
-        if (!alreadyPlayed) {
-            const sound = document.getElementById("closingSound");
-            sound.currentTime = 0;
-            sound.volume = 1;
-
-            sound.play()
-                .then(() => {
-                    localStorage.setItem(closingSoundKey, "true");
-                })
-                .catch(() => {});
-        }
-
     } else {
         page.classList.remove("day-closed");
         closingMessage.style.display = "none";
     }
 }
-function updateNewDayButton() {
+document.addEventListener("click", () => {
+    const now = new Date();
+    const isToday = data.date === todayString();
+    const isClosed = isToday && now.getHours() >= 12; // TESZT
+
+    if (!isClosed) return;
+
+    const closingSoundKey = "closingSoundPlayed_" + todayString();
+    const alreadyPlayed =
+        localStorage.getItem(closingSoundKey) === "true";
+
+    if (alreadyPlayed) return;
+
+    const sound = document.getElementById("closingSound");
+    sound.currentTime = 0;
+    sound.volume = 1;
+
+    sound.play()
+        .then(() => {
+            localStorage.setItem(closingSoundKey, "true");
+        })
+        .catch(() => {});
+});
+   function updateNewDayButton() {
 
     const button = document.getElementById("newDay");
 
