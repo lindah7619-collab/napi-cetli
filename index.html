@@ -627,7 +627,7 @@ function startNewDay() {
 function updateDayState() {
     const now = new Date();
     const isToday = data.date === todayString();
-    const isClosed = isToday && now.getHours() >= 18;
+    const isClosed = isToday && now.getHours() >= 12;
 
     const page = document.querySelector(".page");
     const closingMessage = document.getElementById("closingMessage");
