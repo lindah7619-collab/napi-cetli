@@ -738,7 +738,13 @@ document
             startNewDay();
         }
     });
-setInterval(updateDayState, 30000);
+document.addEventListener("dblclick", () => {
+    const sound = document.getElementById("presenceSound");
+    sound.currentTime = 0;
+    sound.volume = 0.5;
+    sound.play();
+});
+   setInterval(updateDayState, 30000);
 </script>
 
 </body>
